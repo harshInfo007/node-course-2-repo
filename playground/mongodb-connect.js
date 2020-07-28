@@ -6,7 +6,8 @@ const test = require('assert');
 
 const url = 'mongodb://localhost:27017';
 const dbName = 'TodoApp';
-const dbUser = "Users";
+const tblUser = "Users";
+const tblTodo = "Todo";
 
 console.log(new ObjectId())
 
@@ -17,8 +18,8 @@ MongoClient.connect(url, (err, client) => {
         return console.log("not able to create connection with database");
     }
     console.log("Connection is established.");
-    // const db = client.db(dbName)
-    // db.collection('Todos').insertOne({
+    const db = client.db(dbName)
+    // db.collection(tblTodo).insertOne({
     //     text: 'Learn Mongodb',
     //     completed: false,
     // },(errInsert, result) => {
@@ -27,8 +28,7 @@ MongoClient.connect(url, (err, client) => {
     //     }
     //     console.log(JSON.stringify(result.ops, undefined, 2))
     // })
-    const db = client.db(dbUser)
-    db.collection(dbUser).insertOne({
+    db.collection(tblUser).insertOne({
         name: 'Harsh',
         age: 27,
         location: 'abd',

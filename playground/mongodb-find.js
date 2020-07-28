@@ -6,7 +6,8 @@ const test = require('assert');
 
 const url = 'mongodb://localhost:27017';
 const dbName = 'TodoApp';
-const dbUser = "Users";
+const tblUser = "Users";
+const tblTodo = "Todo";
 
 console.log(new ObjectId())
 
@@ -24,7 +25,7 @@ MongoClient.connect(url, (err, client) => {
     // },(errFetch) => {
     //     console.log('Unable to fetch todos', errFetch)
     // })
-    db.collection('Todos').find().count().then((count) => {
+    db.collection(tblTodo).find().count().then((count) => {
         console.log(`count of todos ${count}`);
     },(errFetch) => {
         console.log('Unable to fetch todos', errFetch)

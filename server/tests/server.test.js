@@ -3,13 +3,10 @@ const request = require('supertest');
 
 const { app } = require('../server');
 const { Todo } = require('../models/todo');
+const { populateTodos, todos} = require('./seed/seed')
 
 
-beforeEach((done) => {
-    Todo.remove({}).then(() => {
-        done();
-    })
-})
+beforeEach(populateTodos)
 
 describe('Post /todos', () => {
 

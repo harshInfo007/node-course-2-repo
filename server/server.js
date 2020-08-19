@@ -107,8 +107,6 @@ app.patch('/todos/:todoId',(req,resp) => {
 //USERS OPERATION
 app.post('/users',(req,resp) => {
     var body = _.pick(req.body, ["email", "password"])
-    console.log(`params ${JSON.stringify(req.body)}`)
-    console.log(`body ${JSON.stringify(body)}`)
     mongoose.set('useFindAndModify', false);
 
         var user = new User(body)
@@ -126,6 +124,27 @@ app.post('/users',(req,resp) => {
 
 app.get('/users/me', authenticate, (req,resp) => {
     resp.send(req.user);
+})
+
+app.post('/users/login', (req,resp) => {
+    var body = _.pick(req.body, ["email", "password"])
+
+    User.findByCredentials(body.email, body.password).then((user) => {
+        user.generateAuthToken().then((token) => {
+            resp.header('x-auth', token).send(user)
+        });
+    }).catch((e) => {
+      resp.status(400).send(e)
+    })
+})
+
+app.delete('/users/logout', authenticate, (req,resp) => {
+
+    req.user.removeToken(req.token).then((user) => {
+        resp.send({ message: "logout successfully."})
+    }).catch((e) => {
+      resp.status(401).send()
+    })
 })
 
 app.listen(port, () => {

@@ -69,7 +69,7 @@ UserSchema.methods.removeToken = function(token) {
 UserSchema.methods.generateAuthToken = function() {
     var user = this;
     var access = 'auth';
-    var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
+    var token = jwt.sign({_id: user._id.toHexString(), access}, process.env.JWT_TOKEN).toString();
     console.log(`token ${token}`)
     user.tokens.push({access, token});
 
@@ -84,7 +84,7 @@ UserSchema.statics.findToken = function(token) {
     console.log(JSON.stringify(User))
     var decoded;
     try{
-        decoded = jwt.verify(token, 'abc123')
+        decoded = jwt.verify(token, process.env.JWT_TOKEN)
     }catch(e){
         return Promise.reject(e)
     }

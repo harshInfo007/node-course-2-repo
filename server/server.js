@@ -6,15 +6,17 @@ var { mongoose }= require('./db/mongoos');
 var { Todo } = require('./models/todo');
 var { User} = require('./models/user');
 var { authenticate } = require('./middleware/authenticate');
+const { json } = require('express');
 
 var app = express();
 const port = process.env.PORT || 3000
 
 app.use(bodyParser.json())
 
-app.post('/todos',(req,resp) => {
+app.post('/todos', authenticate,(req,resp) => {
     var todo = new Todo({
         text: req.body.text,
+        _createdBy: req.user._id,
     })
     todo.save().then((doc) => {
         resp.send(doc)
@@ -24,8 +26,10 @@ app.post('/todos',(req,resp) => {
     console.log(req.body);
 })
 
-app.get('/todos',(req,resp) => {
-    Todo.find().then((todos) => {
+app.get('/todos', authenticate,(req,resp) => {
+    Todo.find({
+        _createdBy: req.user._id,
+    }).then((todos) => {
         resp.send({
             todos,
         })
@@ -34,12 +38,24 @@ app.get('/todos',(req,resp) => {
     })
 })
 
-app.get('/todos/:todoId',(req,resp) => {
+app.get('/todos/:todoId',authenticate, (req,resp) => {
     // resp.send(req.params)
     if(!ObjectId.isValid(req.params.todoId)) {
         resp.status(400).send({ error: 'id is not valid one'})
     } else{
-        Todo.findById({ _id: req.params.todoId}).then((todo) => {
+        // Todo.findById({ _id: req.params.todoId}).then((todo) => {
+        //     resp.send({
+        //         todo,
+        //         message: 'todo is fetched successfully.'
+        //     })
+        // }).catch((e) => {resp.send({
+        //     ...e,
+        //     errorMessage: 'todo is fetched successfully.'
+        // })})
+        Todo.findOne({
+            _id: req.params.todoId,
+            _createdBy: req.body._id
+        }).then((todo) => {
             resp.send({
                 todo,
                 message: 'todo is fetched successfully.'
@@ -51,12 +67,31 @@ app.get('/todos/:todoId',(req,resp) => {
     }
 })
 
-app.delete('/todos/:todoId',(req,resp) => {
+app.delete('/todos/:todoId', authenticate, (req,resp) => {
     // resp.send(req.params)
     if(!ObjectId.isValid(req.params.todoId)) {
         resp.status(400).send({ error: 'id is not valid one'})
     } else{
-        Todo.findByIdAndRemove({ _id: req.params.todoId}).then((todo) => {
+        // Todo.findByIdAndRemove({ _id: req.params.todoId}).then((todo) => {
+        //     console.log(todo)
+        //     if(todo){
+        //         resp.send({
+        //             todo,
+        //             message: 'todo is deleted successfully.'
+        //         })
+        //     } else {
+        //         resp.status(400).send({
+        //             error: 'Id is not available'
+        //         })
+        //     }
+        // }).catch((e) => {resp.send({
+        //     ...e,
+        //     errorMessage: 'todo is fetched successfully.'
+        // })})
+        Todo.findOneAndRemove({
+            _id: req.params.todoId,
+            _createdBy: req.user._id,
+        }).then((todo) => {
             console.log(todo)
             if(todo){
                 resp.send({
@@ -75,7 +110,7 @@ app.delete('/todos/:todoId',(req,resp) => {
     }
 })
 
-app.patch('/todos/:todoId',(req,resp) => {
+app.patch('/todos/:todoId', authenticate, (req,resp) => {
     var id = req.params.todoId;
     var body = _.pick(req.body, ["text", "completed"])
     console.log(`params ${JSON.stringify(req.body)}`)
@@ -92,7 +127,7 @@ app.patch('/todos/:todoId',(req,resp) => {
             body.completedAt = null;
         }
 
-        Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+        Todo.findOneAndUpdate({_id: id, _createdBy: req.user._id}, {$set: body}, {new: true}).then((todo) => {
             if(!todo){
                 return resp.status(400).send()
             }
@@ -100,6 +135,15 @@ app.patch('/todos/:todoId',(req,resp) => {
         }).catch((e) => {
             resp.status(400).send(e)
         })
+
+        // Todo.findByIdAndUpdate({id}, {$set: body}, {new: true}).then((todo) => {
+        //     if(!todo){
+        //         return resp.status(400).send()
+        //     }
+        //     resp.send({todo})
+        // }).catch((e) => {
+        //     resp.status(400).send(e)
+        // })
     }
 })
 

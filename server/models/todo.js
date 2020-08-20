@@ -11,6 +11,10 @@ var Todo = mongoose.model('Todo',{
         type: Boolean,
         default: false,
     },
+    _createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+    },
     completedAt: {
         type: Number,
         default: null,
